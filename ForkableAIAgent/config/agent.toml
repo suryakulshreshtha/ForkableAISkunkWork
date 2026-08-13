@@ -1,0 +1,52 @@
+# ForkableAIAgent configuration.
+# Every value here can be overridden by an environment variable; see .env.example.
+
+# Hard-block any socket that is not loopback. Leave this on.
+offline = true
+
+memory_path = ".forkable/memory.json"
+report_dir  = ".forkable/reports"
+
+[llm]
+provider = "ollama"                 # ollama | none  ("none" forces the rule engine)
+base_url = "http://127.0.0.1:11434" # must be loopback
+model = "qwen2.5-coder:14b"
+embed_model = "nomic-embed-text"
+temperature = 0.1
+timeout_s = 120.0
+num_ctx = 8192
+allow_rule_based_fallback = true
+# If `model` is not pulled locally, the first of these that is gets used.
+model_preferences = ["qwen2.5-coder:14b", "qwen2.5-coder:7b", "qwen3:8b", "llama3.1:8b", "mistral:7b"]
+embed_preferences = ["nomic-embed-text", "mxbai-embed-large", "all-minilm"]
+
+[rag]
+knowledge_dir = "knowledge"
+index_dir = ".forkable/index"
+backend = "builtin"                 # builtin | chroma
+embedder = "auto"                   # auto | ollama | hashing
+chunk_chars = 900
+chunk_overlap = 150
+top_k = 5
+hybrid_alpha = 0.6                  # 1.0 = pure dense, 0.0 = pure BM25
+embed_dim = 512
+
+[browser]
+engine = "chromium"                 # chromium | firefox | webkit
+headless = true
+slow_mo_ms = 0
+viewport_width = 1280
+viewport_height = 800
+default_timeout_ms = 5000
+trace = false
+artifacts_dir = ".forkable/artifacts"
+
+[app]
+host = "127.0.0.1"
+port = 8799
+
+[visual]
+baseline_dir = "baselines"
+diff_dir = ".forkable/artifacts/visual"
+pixel_tolerance = 12
+max_diff_ratio = 0.02

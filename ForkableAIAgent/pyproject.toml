@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "forkable-ai-agent"
+version = "0.1.0"
+description = "Offline-first Playwright AI test agent: plan, generate, run, self-heal and explain UI tests with a local LLM."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Surya Kulshreshtha" }]
+keywords = ["playwright", "testing", "ai-agent", "ollama", "rag", "self-healing", "offline"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: Pytest",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Testing",
+]
+
+# The agent core deliberately has no runtime dependency beyond Playwright.
+# Planning, RAG, healing, codegen and reporting all run on the standard library.
+dependencies = ["playwright>=1.40"]
+
+[project.optional-dependencies]
+visual = ["pillow>=10.0"]
+chroma = ["chromadb>=0.5"]            # only if you want to share the sibling repo's store
+dev = [
+    "pytest>=8.0",
+    "pytest-playwright>=0.5",
+    "pillow>=10.0",
+    "ruff>=0.5",
+]
+
+[project.scripts]
+forkable = "forkable_ai_agent.cli:main"
+
+[project.urls]
+Repository = "https://github.com/suryakulshreshtha/ForkableAISkunkWork"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501", "B008"]
