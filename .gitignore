@@ -1,0 +1,23 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.env
+
+# agent runtime state
+.forkable/
+ForkableAIAgent/tests/generated/
+ForkableAIAgent/.forkable/
+
+# offline transfer bundles (large)
+forkable-offline-bundle*/
+*.tar.gz
+wheelhouse/
+ms-playwright/
+
+.pytest_cache/
+.ruff_cache/
+.DS_Store
