@@ -1,0 +1,7 @@
+Test: login_happy_path
+go to the login page
+fill username with demo
+fill password with secret123
+click log in
+should be redirected to /dashboard
+should see Welcome
