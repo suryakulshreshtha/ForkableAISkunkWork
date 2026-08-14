@@ -27,7 +27,8 @@ forkable demo
 ```
 
 See [ForkableAIAgent/README.md](ForkableAIAgent/README.md) for the full write-up,
-and [RESULTS.md](ForkableAIAgent/RESULTS.md) for the verification table.
+[RESULTS.md](ForkableAIAgent/RESULTS.md) for the verification table, and
+[PUBLISHING.md](PUBLISHING.md) for repository details and the macOS publish process.
 
 ## Sibling repository
 
