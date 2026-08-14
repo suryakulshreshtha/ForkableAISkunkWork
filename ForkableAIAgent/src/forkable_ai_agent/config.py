@@ -111,6 +111,10 @@ class Settings:
     app: AppConfig = field(default_factory=AppConfig)
     visual: VisualConfig = field(default_factory=VisualConfig)
     memory_path: str = ".forkable/memory.json"
+    # Prefixed onto every locator-memory scope. Two environments that serve
+    # different DOMs at the same path (staging vs prod, or the demo's v1 vs v2)
+    # must not share learned selectors.
+    memory_namespace: str = ""
     report_dir: str = ".forkable/reports"
     root: str = ""
 
@@ -156,6 +160,7 @@ def load_settings(config_path: str | os.PathLike[str] | None = None) -> Settings
     settings.browser.headless = _as_bool(
         env.get("FORKABLE_HEADLESS"), settings.browser.headless
     )
+    settings.memory_namespace = env.get("FORKABLE_MEMORY_NS", settings.memory_namespace)
     if env.get("FORKABLE_APP_PORT"):
         settings.app.port = int(env["FORKABLE_APP_PORT"])
 

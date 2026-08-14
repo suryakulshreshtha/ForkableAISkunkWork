@@ -51,6 +51,9 @@ def _agent(args: argparse.Namespace):
         settings.browser.headless = False
     if getattr(args, "browser", ""):
         settings.browser.engine = args.browser
+    if getattr(args, "variant", ""):
+        # v1 and v2 are different DOMs at the same path; keep their memories apart.
+        settings.memory_namespace = args.variant
     if settings.offline:
         enforce_offline()
     return ForkableAgent(settings)
@@ -209,6 +212,7 @@ def cmd_demo(args: argparse.Namespace) -> int:
     exit_code = 0
     for variant, label in (("v1", "stable UI"), ("v2", "refactored UI - ids and labels changed")):
         os.environ["FORKABLE_UI_VARIANT"] = variant
+        os.environ["FORKABLE_MEMORY_NS"] = variant
         print(_colour(f"\n=== {variant}: {label} ===", BOLD))
         agent = _agent(args)
         result = agent.run(spec, headed=args.headed)
@@ -216,6 +220,7 @@ def cmd_demo(args: argparse.Namespace) -> int:
         if result.status != "passed":
             exit_code = 1
     os.environ.pop("FORKABLE_UI_VARIANT", None)
+    os.environ.pop("FORKABLE_MEMORY_NS", None)
     return exit_code
 
 

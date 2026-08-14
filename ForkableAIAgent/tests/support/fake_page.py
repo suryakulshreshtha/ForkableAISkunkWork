@@ -19,6 +19,7 @@ which is the entire claim self-healing makes.
 from __future__ import annotations
 
 import re
+import urllib.error
 import urllib.parse
 import urllib.request
 from collections.abc import Sequence
@@ -294,6 +295,73 @@ class FakeLocator:
             node.attrs["checked"] = "checked"
 
 
+class FakeResponse:
+    """Mirrors the slice of Playwright's APIResponse the agent uses."""
+
+    def __init__(self, status: int, body: bytes, headers: Any) -> None:
+        self.status = status
+        self._body = body
+        self.headers = headers
+
+    def json(self) -> Any:
+        import json as _json
+
+        return _json.loads(self._body.decode("utf-8"))
+
+    def text(self) -> str:
+        return self._body.decode("utf-8", "replace")
+
+
+class FakeRequestContext:
+    """``page.request`` - shares the page's cookie jar, exactly like Playwright."""
+
+    def __init__(self, page: FakePage) -> None:
+        self.page = page
+
+    def _call(self, method: str, url: str, data: Any = None, timeout: int = 0) -> FakeResponse:
+        import json as _json
+
+        body = None
+        headers = {}
+        if data is not None:
+            body = data.encode() if isinstance(data, str) else _json.dumps(data).encode()
+            headers["Content-Type"] = "application/json"
+        request = urllib.request.Request(url, data=body, method=method.upper())
+        for key, value in headers.items():
+            request.add_header(key, value)
+        if self.page.cookies:
+            request.add_header(
+                "Cookie", "; ".join(f"{k}={v}" for k, v in self.page.cookies.items())
+            )
+        try:
+            response = urllib.request.urlopen(request, timeout=10)
+            status, payload, resp_headers = response.status, response.read(), response.headers
+        except urllib.error.HTTPError as exc:
+            status, payload, resp_headers = exc.code, exc.read(), exc.headers
+        for value in resp_headers.get_all("Set-Cookie") or []:
+            name, _, rest = value.partition("=")
+            self.page.cookies[name.strip()] = rest.split(";")[0]
+        return FakeResponse(status, payload, resp_headers)
+
+    def get(self, url: str, **kw: Any) -> FakeResponse:
+        return self._call("GET", url, **kw)
+
+    def post(self, url: str, **kw: Any) -> FakeResponse:
+        return self._call("POST", url, **kw)
+
+    def put(self, url: str, **kw: Any) -> FakeResponse:
+        return self._call("PUT", url, **kw)
+
+    def patch(self, url: str, **kw: Any) -> FakeResponse:
+        return self._call("PATCH", url, **kw)
+
+    def delete(self, url: str, **kw: Any) -> FakeResponse:
+        return self._call("DELETE", url, **kw)
+
+    def head(self, url: str, **kw: Any) -> FakeResponse:
+        return self._call("HEAD", url, **kw)
+
+
 class FakePage:
     """Playwright-shaped page backed by urllib and an HTML parser."""
 
@@ -303,6 +371,7 @@ class FakePage:
         self.document = Document("<html><body></body></html>")
         self.cookies: dict[str, str] = {}
         self.history: list[str] = []
+        self.request = FakeRequestContext(self)
 
     # -- navigation ----------------------------------------------------
     def goto(self, url: str, wait_until: str = "", **_: Any) -> None:

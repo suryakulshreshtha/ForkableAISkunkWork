@@ -1,0 +1,33 @@
+# Two profiles:
+#   docker compose up agent            - tests only, no model, fully offline
+#   docker compose --profile llm up    - adds a local Ollama on the same bridge
+services:
+  agent:
+    build: .
+    image: forkable-ai-agent:0.1.0
+    environment:
+      FORKABLE_OFFLINE: "1"
+      OLLAMA_HOST: http://ollama:11434
+      FORKABLE_APP_PORT: "8799"
+    ports:
+      - "127.0.0.1:8799:8799"   # bound to loopback on the host, deliberately
+    volumes:
+      - ./baselines:/app/baselines          # visual baselines survive rebuilds
+      - ./.forkable:/app/.forkable          # locator memory and reports
+    # The bridge network is not the internet; the in-process guard still blocks
+    # anything that is not loopback from the agent's own point of view.
+    command: ["python", "-m", "pytest", "-q", "-m", "not e2e"]
+
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["llm"]
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    # Pull once, then this runs entirely offline:
+    #   docker compose exec ollama ollama pull qwen2.5-coder:14b
+    #   docker compose exec ollama ollama pull nomic-embed-text
+
+volumes:
+  ollama-models:

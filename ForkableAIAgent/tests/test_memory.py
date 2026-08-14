@@ -43,3 +43,18 @@ def test_healing_report_surfaces_healed_entries_first(tmp_path):
 
 def test_unknown_description_returns_nothing(tmp_path):
     assert Memory(tmp_path / "m.json").known_keys("nope", "/x") == []
+
+
+def test_namespace_keeps_environments_apart(tmp_path):
+    """Two DOMs at one path must not share learned selectors."""
+    memory = Memory(tmp_path / "m.json")
+    memory.record_success("username", scope_for("http://x/login", "v1"), "css||0|#username", "id")
+    memory.record_success("username", scope_for("http://x/login", "v2"), "css||0|#usr_1a2b", "healed-id")
+
+    assert memory.known_keys("username", scope_for("http://x/login", "v1")) == ["css||0|#username"]
+    assert memory.known_keys("username", scope_for("http://x/login", "v2")) == ["css||0|#usr_1a2b"]
+
+
+def test_scope_without_a_namespace_is_unchanged():
+    assert scope_for("http://x/login") == "/login"
+    assert scope_for("http://x/login", "staging") == "staging:/login"

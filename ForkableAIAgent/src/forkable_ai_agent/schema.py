@@ -30,7 +30,16 @@ ACTIONS = {
     "expect_url",
     "expect_title",
     "expect_value",
+    # API-side steps. They share the browser's cookie jar, so a UI login and a
+    # subsequent API assertion are the same session - which is the whole point
+    # of doing API and UI in one plan rather than two suites.
+    "api_request",
+    "expect_status",
+    "expect_json",
 }
+
+#: Steps that operate on the last API response rather than the DOM.
+API_ACTIONS = {"api_request", "expect_status", "expect_json"}
 
 #: Actions that need an element on the page (and therefore locator resolution).
 ELEMENT_ACTIONS = {
@@ -66,6 +75,15 @@ class Step:
             )
         if self.action in ELEMENT_ACTIONS and not self.target:
             raise PlanError(f"action {self.action!r} requires a target description")
+        if self.action == "api_request":
+            parts = self.target.split()
+            if len(parts) != 2 or parts[0].upper() not in {
+                "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD",
+            }:
+                raise PlanError(
+                    f"api_request target must be '<METHOD> <path>', got {self.target!r}"
+                )
+            self.target = f"{parts[0].upper()} {parts[1]}"
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

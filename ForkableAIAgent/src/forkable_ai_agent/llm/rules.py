@@ -43,6 +43,22 @@ _FIELD_WORDS = r"(?:field|box|input|textbox|text box|control)"
 
 # Ordered: the first pattern that matches a sentence wins.
 _RULES: list[tuple[str, re.Pattern[str]]] = [
+    ("api_request", re.compile(
+        r"^(?:call|request|hit|send)\s+(?:a\s+)?(?P<target>(?:GET|POST|PUT|PATCH|DELETE|HEAD)\s+\S+)"
+        r"(?:\s+with\s+(?P<value>\{.*\}))?\s*$", re.IGNORECASE)),
+    ("expect_status", re.compile(
+        r"^(?:the\s+)?(?:response\s+)?status\s+(?:code\s+)?should\s+be\s+(?P<value>\d{3})\s*$",
+        re.IGNORECASE)),
+    # Two shapes, both deliberately narrow so ordinary UI sentences such as
+    # "the banner should be visible" can never be mistaken for a JSON assertion.
+    # A: explicit - "the response count should be 3".
+    ("expect_json", re.compile(
+        r"^(?:the\s+)?(?:response|json|payload|body)\s+(?P<target>[\w.]+)\s+"
+        r"should\s+(?:be|equal|contain)\s+(?P<value>.+?)\s*$", re.IGNORECASE)),
+    # B: implicit, but only for a dotted path - "jobs.0.status should be completed".
+    ("expect_json", re.compile(
+        r"^(?P<target>[a-z_][\w]*(?:\.[\w]+)+)\s+"
+        r"should\s+(?:be|equal|contain)\s+(?P<value>.+?)\s*$", re.IGNORECASE)),
     ("goto", re.compile(
         r"^(?:go to|open|navigate to|visit|browse to|land on)\s+(?P<target>.+?)\s*$",
         re.IGNORECASE)),
@@ -214,6 +230,19 @@ def nl_to_plan_dict(spec: str, base_url: str = "") -> dict[str, Any]:
 
             if action == "goto":
                 step["target"] = _normalise_url(target)
+            elif action == "api_request":
+                step["target"] = " ".join(target.split()).upper().replace(
+                    target.split()[1].upper(), target.split()[1], 1
+                ) if len(target.split()) == 2 else target
+                method, _, path = target.strip().partition(" ")
+                step["target"] = f"{method.upper()} {path}"
+                if value:
+                    step["value"] = value.strip()
+            elif action == "expect_status":
+                step["value"] = _strip_wrapping(value)
+            elif action == "expect_json":
+                step["target"] = _strip_wrapping(target)
+                step["value"] = _strip_wrapping(value)
             elif action in {"expect_url", "expect_title", "expect_text", "expect_no_text"}:
                 step["value"] = (
                     _normalise_url(value) if action == "expect_url" else _strip_wrapping(value)

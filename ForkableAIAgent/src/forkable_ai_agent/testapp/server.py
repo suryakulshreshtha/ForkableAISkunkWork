@@ -21,6 +21,14 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 USERS = {"demo": "secret123", "qa.lead": "playwright"}
 
+#: Shared by the dashboard table and the JSON API, so UI and API assertions in
+#: one plan are checking the same underlying data.
+JOBS = [
+    {"name": "nightly-ingest", "status": "completed", "duration": "4m 02s"},
+    {"name": "index-rebuild", "status": "completed", "duration": "1m 47s"},
+    {"name": "report-mailer", "status": "queued", "duration": "-"},
+]
+
 STYLE = """
 :root{--ink:#101a2b;--muted:#5b6880;--line:#dfe3ea;--accent:#0f6e5c;--bad:#a3132b;--bg:#fbfbf9}
 *{box-sizing:border-box}
@@ -98,12 +106,8 @@ def login_form(variant: str, error: str = "") -> str:
 
 def dashboard_page(user: str) -> str:
     rows = "".join(
-        f"<tr><td>{job}</td><td>{status}</td><td>{took}</td></tr>"
-        for job, status, took in (
-            ("nightly-ingest", "completed", "4m 02s"),
-            ("index-rebuild", "completed", "1m 47s"),
-            ("report-mailer", "queued", "-"),
-        )
+        f"<tr><td>{job['name']}</td><td>{job['status']}</td><td>{job['duration']}</td></tr>"
+        for job in JOBS
     )
     return f"""
         <h1>Welcome, {user}</h1>
@@ -148,6 +152,14 @@ class _Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _send_json(self, status: int, payload: dict) -> None:
+        body = json.dumps(payload).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
     def _redirect(self, location: str, headers: tuple[tuple[str, str], ...] = ()) -> None:
         self.send_response(302)
         self.send_header("Location", location)
@@ -162,6 +174,14 @@ class _Handler(BaseHTTPRequestHandler):
         query = urllib.parse.parse_qs(parsed.query)
         route = parsed.path.rstrip("/") or "/"
         variant = self._variant(query)
+
+        if route == "/api/jobs":
+            session = self._session()
+            if session is None:
+                self._send_json(401, {"error": "authentication required"})
+                return
+            self._send_json(200, {"user": session.user, "count": len(JOBS), "jobs": JOBS})
+            return
 
         if route == "/health":
             payload = json.dumps({"status": "ok", "variant": variant}).encode()
@@ -210,6 +230,27 @@ class _Handler(BaseHTTPRequestHandler):
         length = int(self.headers.get("Content-Length") or 0)
         raw = self.rfile.read(length).decode("utf-8") if length else ""
         form = {k: v[0] for k, v in urllib.parse.parse_qs(raw).items()}
+
+        if parsed.path.rstrip("/") == "/api/login":
+            try:
+                payload = json.loads(raw or "{}")
+            except json.JSONDecodeError:
+                self._send_json(400, {"error": "malformed json"})
+                return
+            user = str(payload.get("username", "")).strip()
+            if USERS.get(user) == payload.get("password"):
+                sid = secrets.token_urlsafe(16)
+                _Handler.sessions[sid] = _Session(user=user)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Set-Cookie", f"sid={sid}; Path=/; HttpOnly")
+                body = json.dumps({"user": user, "token": sid}).encode()
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+                return
+            self._send_json(401, {"error": "invalid credentials"})
+            return
 
         if parsed.path.rstrip("/") != "/login":
             self._send(404, _page("Not found", "<h1>404</h1>"))

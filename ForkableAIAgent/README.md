@@ -74,6 +74,16 @@ forkable index
 Without Ollama, everything still runs — a deterministic rule grammar plans and a
 stdlib hashing embedder powers retrieval.
 
+Or skip the install entirely:
+
+```bash
+docker compose up agent              # tests, no model, fully offline
+docker compose --profile llm up      # adds a local Ollama on the same bridge
+```
+
+The image pins the browser *and* its fonts, which is what makes visual baselines
+reproducible between a laptop and CI.
+
 ## Use
 
 ```bash
@@ -103,9 +113,29 @@ without it, the guard is armed.
 | Failure analysis | Rule classification + hybrid RAG over local notes + optional LLM summary |
 | Visual validation | Pillow pixel diff with tolerance, red-overlay heatmaps, baseline management |
 | Cross-browser | Chromium, Firefox, WebKit via `--browser` |
-| API + UI | Assertions poll the live page; the demo target exposes `/health` for API checks |
+| API + UI | `api_request` / `expect_status` / `expect_json` steps run through `page.request`, sharing the browser's cookie jar |
 | Regression + CI | `pytest -m "not e2e"` needs no browser and no model |
 | Context-aware execution | Locator memory is scoped per page path, so the same description can bind differently per page |
+
+## API and UI in one plan
+
+`page.request` shares the browser's cookie jar, so a UI login authenticates the
+API call that follows. That is the whole reason to keep them in one plan rather
+than two suites:
+
+```
+go to the login page
+fill username with demo
+fill password with secret123
+click log in
+call GET /api/jobs
+the response status should be 200
+jobs.0.name should be nightly-ingest
+the response count should be 3
+```
+
+`expect_json` walks a dotted path (`jobs.0.status`), and reports the available
+keys when the path is wrong rather than an opaque `KeyError`.
 
 ## Generated code improves after a run
 
@@ -168,9 +198,25 @@ Nothing here hard-fails because a dependency is missing.
 ## Testing
 
 ```bash
-make test        # 96 tests, no browser and no model needed
-make test-e2e    # real Chromium
+make test        # 125 tests
+make test-e2e    # the 5 that need real Chromium
+make ci          # everything the GitHub workflow runs, locally
+make docker      # the suite inside the pinned Playwright image
 ```
+
+`scripts/ci_local.sh` mirrors the workflow step for step. Run it before pushing:
+a workflow cannot be tested until it is on GitHub, and this is how you find out
+whether it will pass first.
+
+Two fake servers keep coverage honest without network or hardware:
+
+- `tests/support/fake_page.py` — a miniature headless browser that speaks HTTP
+  to the real demo app and parses the real HTML, so healing stays covered on
+  machines where a 150 MB browser download is not an option.
+- `tests/support/fake_ollama.py` — serves the real Ollama endpoints with the
+  real payload shapes on loopback, so plan generation, the healing tie-break,
+  embeddings and failure narration are exercised over actual HTTP rather than
+  against mock objects.
 
 The suite includes a miniature headless browser (`tests/support/fake_page.py`)
 that speaks HTTP to the real demo app, parses the real HTML and implements the
@@ -192,7 +238,7 @@ src/forkable_ai_agent/
   agent/              planner, healer, executor, generator, analyzer, memory
   visual/             baseline management and pixel diffing
   reporting/          self-contained HTML + JSON reports
-  testapp/            the offline demo target with its v2 refactor variant
+  testapp/            the offline demo target, its v2 refactor variant and JSON API
 knowledge/            the corpus the RAG layer retrieves from
 tests/                unit, integration and e2e suites
 ```
@@ -215,10 +261,9 @@ the extra and set `backend = "chroma"` in `config/agent.toml` —
 
 ## Known nuances
 
-- Locator memory is scoped by URL path. The demo's two variants share `/login`,
-  so after running both, the generator emits whichever locator scored highest
-  most recently. Real apps do not serve two DOMs at one path; if yours does,
-  scope the memory file per environment.
+- Locator memory is namespaced. Set `memory_namespace` (or `FORKABLE_MEMORY_NS`)
+  when two environments serve different DOMs at the same path — staging versus
+  production, or the demo's own v1 and v2. `--variant` sets it automatically.
 - Font rendering differs between machines, so visual baselines should be
   produced in the same container that verifies them.
 - The healer repairing a selector is a bug report against the app. The durable

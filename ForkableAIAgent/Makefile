@@ -1,4 +1,4 @@
-.PHONY: help install install-offline doctor index test test-e2e demo serve generate lint clean
+.PHONY: help install install-offline doctor index test test-e2e test-api demo serve generate lint ci docker clean
 
 PY ?= python3
 export PYTHONPATH := src
@@ -34,8 +34,15 @@ serve:  ## serve the offline demo target
 generate:  ## regenerate the example standalone test
 	$(PY) -m forkable_ai_agent generate --file examples/nl_specs/login.txt --out tests/generated
 
+ci:  ## run everything the GitHub workflow runs, locally
+	./scripts/ci_local.sh
+
+docker:  ## build and run the suite in the pinned Playwright image
+	docker build -t forkable-ai-agent:0.1.0 .
+	docker run --rm forkable-ai-agent:0.1.0
+
 lint:
-	ruff check src tests
+	python3 -m ruff check src tests scripts
 
 clean:
 	rm -rf .forkable .pytest_cache **/__pycache__ tests/generated

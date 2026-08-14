@@ -9,12 +9,13 @@ a raised exception with an opaque string.
 
 from __future__ import annotations
 
+import json
 import time
 from collections.abc import Callable
 from typing import Any
 from urllib.parse import urljoin
 
-from ..schema import ELEMENT_ACTIONS, RunResult, Step, StepResult, TestPlan
+from ..schema import API_ACTIONS, ELEMENT_ACTIONS, RunResult, Step, StepResult, TestPlan
 from .healer import LocatorResolver
 
 
@@ -49,6 +50,10 @@ class Executor:
         self.analyzer = analyzer
         self.visual = visual
         self.on_step = on_step
+        #: Last API response in this run, shared across api_request ->
+        #: expect_status -> expect_json steps.
+        self.last_response: Any = None
+        self.last_body: Any = None
 
     # ------------------------------------------------------------------
     def _url_for(self, plan: TestPlan, target: str) -> str:
@@ -89,6 +94,75 @@ class Executor:
         return result
 
     # ------------------------------------------------------------------
+    @staticmethod
+    def _dig(payload: Any, path: str) -> Any:
+        """Walk a dotted path like ``jobs.0.status`` through parsed JSON."""
+        current = payload
+        for part in [p for p in path.split(".") if p]:
+            if isinstance(current, list):
+                try:
+                    current = current[int(part)]
+                except (ValueError, IndexError):
+                    raise StepFailed(f"no index {part!r} in list of {len(current)}") from None
+            elif isinstance(current, dict):
+                if part not in current:
+                    raise StepFailed(f"no key {part!r} in {sorted(current)[:8]}")
+                current = current[part]
+            else:
+                raise StepFailed(f"cannot descend into {type(current).__name__} at {part!r}")
+        return current
+
+    def _execute_api(
+        self,
+        plan: TestPlan,
+        page: Any,
+        step: Step,
+        record: StepResult,
+        timeout: int,
+    ) -> None:
+        if step.action == "api_request":
+            method, _, path = step.target.partition(" ")
+            url = self._url_for(plan, path)
+            # page.request shares the browser's cookie jar, so a UI login
+            # authenticates the API call without re-authenticating.
+            context = page.request
+            kwargs: dict = {"timeout": timeout}
+            if step.value:
+                try:
+                    kwargs["data"] = json.loads(step.value)
+                except json.JSONDecodeError:
+                    kwargs["data"] = step.value
+            self.last_response = getattr(context, method.lower())(url, **kwargs)
+            self.last_body = None
+            record.selector = f"{method} {url}"
+            record.message = f"HTTP {self.last_response.status}"
+            return
+
+        if self.last_response is None:
+            raise StepFailed(f"{step.action} needs an api_request step before it")
+
+        if step.action == "expect_status":
+            expected = int(step.value or 200)
+            actual = self.last_response.status
+            record.selector = str(actual)
+            if actual != expected:
+                raise StepFailed(f"expected status {expected}, got {actual}")
+            return
+
+        if step.action == "expect_json":
+            if self.last_body is None:
+                try:
+                    self.last_body = self.last_response.json()
+                except Exception as exc:
+                    raise StepFailed(f"response body is not JSON: {exc}") from exc
+            value = self._dig(self.last_body, step.target)
+            record.selector = f"{step.target}={value!r}"
+            if step.value and str(step.value).lower() not in str(value).lower():
+                raise StepFailed(
+                    f"expected {step.target} to contain {step.value!r}, got {value!r}"
+                )
+            return
+
     def _execute(
         self,
         plan: TestPlan,
@@ -103,6 +177,10 @@ class Executor:
         if action == "goto":
             page.goto(self._url_for(plan, step.target or "/"), wait_until="domcontentloaded")
             record.selector = self._url_for(plan, step.target or "/")
+            return
+
+        if action in API_ACTIONS:
+            self._execute_api(plan, page, step, record, timeout)
             return
 
         if action == "wait":

@@ -57,3 +57,30 @@ def test_visual_baseline_round_trip(settings, demo_app, variant_v1):
         assert first.created_baseline
         second = validator.check(session.page, "login_page")
         assert second.passed and not second.created_baseline
+
+
+def test_api_and_ui_share_one_session_in_chromium(settings, demo_app, variant_v1):
+    """A UI login authenticates the subsequent API call, in a real browser."""
+    from forkable_ai_agent.agent import ForkableAgent
+
+    spec = (
+        "go to the login page\n"
+        "fill username with demo\n"
+        "fill password with secret123\n"
+        "click log in\n"
+        "call GET /api/jobs\n"
+        "the response status should be 200\n"
+        "jobs.0.name should be nightly-ingest\n"
+        "the response count should be 3\n"
+    )
+    agent = ForkableAgent(settings, probe_llm=False)
+    result = agent.run(spec, base_url=demo_app.base_url, autostart_app=False)
+    assert result.status == "passed", [s.message for s in result.steps if s.status == "failed"]
+
+
+def test_api_call_without_login_is_unauthorised_in_chromium(settings, demo_app):
+    from forkable_ai_agent.agent import ForkableAgent
+
+    spec = "call GET /api/jobs\nthe response status should be 401\n"
+    agent = ForkableAgent(settings, probe_llm=False)
+    assert agent.run(spec, base_url=demo_app.base_url, autostart_app=False).status == "passed"

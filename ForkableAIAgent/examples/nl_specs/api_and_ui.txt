@@ -1,0 +1,10 @@
+Test: api_after_ui_login
+go to the login page
+fill username with demo
+fill password with secret123
+click log in
+should be redirected to /dashboard
+call GET /api/jobs
+the response status should be 200
+jobs.0.name should be nightly-ingest
+the response count should be 3

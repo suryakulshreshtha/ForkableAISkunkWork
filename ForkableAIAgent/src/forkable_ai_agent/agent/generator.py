@@ -83,6 +83,7 @@ class TestGenerator:
     def __init__(self, settings, memory: Memory | None = None) -> None:
         self.settings = settings
         self.memory = memory
+        self.namespace = getattr(settings, "memory_namespace", "")
 
     # ------------------------------------------------------------------
     def _locator_code(self, description: str, action: str, scope: str) -> tuple[str, str]:
@@ -158,7 +159,7 @@ class TestGenerator:
 
         if action == "goto":
             target = step.target or "/"
-            scope = scope_for(target)
+            scope = scope_for(target, self.namespace)
             if target.startswith(("http://", "https://")):
                 out.append(f"    page.goto({_py_str(target)})")
             else:
@@ -181,6 +182,26 @@ class TestGenerator:
             name = step.value or "page"
             out.append(f"    # visual baseline check '{name}' runs through the agent runtime")
             out.append(f'    page.screenshot(path={_py_str(f".forkable/artifacts/{name}.png")})')
+            return out, scope, note
+
+        if action == "api_request":
+            method, _, path = step.target.partition(" ")
+            body = f", data={step.value}" if step.value else ""
+            url = (_py_str(path) if path.startswith("http")
+                   else f'f"{{BASE_URL}}{path if path.startswith("/") else "/" + path}"')
+            out.append(f"    response = page.request.{method.lower()}({url}{body})")
+            return out, scope, note
+
+        if action == "expect_status":
+            out.append(f"    assert response.status == {int(step.value or 200)}, response.text()")
+            return out, scope, note
+
+        if action == "expect_json":
+            path = "".join(
+                f"[{int(part)}]" if part.isdigit() else f"[{_py_str(part)}]"
+                for part in step.target.split(".") if part
+            )
+            out.append(f"    assert {_py_str(step.value)}.lower() in str(response.json(){path}).lower()")
             return out, scope, note
 
         if action == "expect_url":

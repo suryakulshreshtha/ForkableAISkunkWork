@@ -19,13 +19,17 @@ from urllib.parse import urlparse
 MEMORY_VERSION = 2
 
 
-def scope_for(url: str) -> str:
-    """Page scope for a URL: path only, so ports and query strings do not split the cache."""
+def scope_for(url: str, namespace: str = "") -> str:
+    """Page scope for a URL.
+
+    Path only, so ports and query strings do not fragment the cache, optionally
+    prefixed by a namespace so distinct environments keep distinct memories.
+    """
     if not url:
-        return "*"
+        return f"{namespace}:*" if namespace else "*"
     parsed = urlparse(url)
-    path = parsed.path or "/"
-    return path.rstrip("/") or "/"
+    path = (parsed.path or "/").rstrip("/") or "/"
+    return f"{namespace}:{path}" if namespace else path
 
 
 @dataclass

@@ -206,6 +206,7 @@ class LocatorResolver:
         self.settings = settings
         self.memory = memory
         self.llm = llm
+        self.namespace = getattr(settings, "memory_namespace", "")
         self.heuristic_threshold = heuristic_threshold
         self.ask_llm_below = ask_llm_below
         self.events: list[dict] = []
@@ -230,7 +231,7 @@ class LocatorResolver:
 
     # ------------------------------------------------------------------
     def resolve(self, page: Any, description: str, action: str = "") -> Resolution:
-        scope = scope_for(getattr(page, "url", "") or "")
+        scope = scope_for(getattr(page, "url", "") or "", self.namespace)
         known = self.memory.known_keys(description, scope)
         candidates = build_candidates(description, action, known=known)
 
@@ -307,7 +308,7 @@ class LocatorResolver:
                 )
             candidate = fallback
 
-        scope = scope_for(getattr(page, "url", "") or "")
+        scope = scope_for(getattr(page, "url", "") or "", self.namespace)
         self.memory.record_success(description, scope, candidate.key, candidate.strategy, healed=True)
         self.events.append({
             "description": description,
