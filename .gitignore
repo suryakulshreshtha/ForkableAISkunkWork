@@ -28,3 +28,14 @@ __pycache__/
 *.zip
 *.save
 PlaywrightSelfHealer/tests/generated/
+ Virtual env and caches
+.venv/
+__pycache__/
+
+# Backups and archives
+*.zip
+*.save
+
+# Generated tests
+PlaywrightSelfHealer/tests/generated/
+PlaywrightSelfHealer/tests/generated/
