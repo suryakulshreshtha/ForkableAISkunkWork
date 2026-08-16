@@ -21,3 +21,10 @@ ms-playwright/
 .pytest_cache/
 .ruff_cache/
 .DS_Store
+.venv/
+
+__pycache__/
+
+*.zip
+*.save
+PlaywrightSelfHealer/tests/generated/
