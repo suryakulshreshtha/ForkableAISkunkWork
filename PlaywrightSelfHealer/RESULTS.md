@@ -19,15 +19,15 @@ scripts/ci_local.sh          # CI would pass  (7/7 stages)
 | 3 | AI-assisted test generation | **PASS** | Generated file executed standalone in Chromium and passed |
 | 4 | Automatic failure analysis | **PASS** | 10-way classification + RAG citations + LLM narration |
 | 5 | Visual UI validation | **PASS** | Tolerance, ratio threshold, size change, diff heatmaps |
-| 6 | Cross-browser testing | **PARTIAL** | Chromium verified end-to-end. Firefox/WebKit are wired via `--browser`; only the Chromium bundle exists in this sandbox, so they remain untested |
+| 6 | Cross-browser testing | **PARTIAL** | Chromium verified end-to-end. Firefox/WebKit are wired via `--browser` but no run has proved them; the README says so plainly |
 | 7 | API + UI test automation | **PASS** | `api_request` / `expect_status` / `expect_json` through `page.request`; UI login authenticates the API call in real Chromium (`tests/test_api_steps.py`, 8) |
 | 8 | Regression testing | **PASS** | Same spec passes across a breaking refactor; namespaced locator memory persists |
 | 9 | CI/CD integration | **PARTIAL** | Workflow written; `scripts/ci_local.sh` runs all 7 stages locally and passes. GitHub Actions itself still unrun |
 | 10 | Context-aware execution | **PASS** | Memory namespaced per environment + URL path; RAG grounds diagnoses |
 | 11 | RAG + LLM integration | **PASS** | Hybrid BM25+dense verified; full Ollama path verified over real HTTP (`tests/test_llm_path.py`, 17) |
 | 12 | Runs fully offline | **PASS** | Socket + DNS guard; 4/4 egress probes refused; suite green with `FORKABLE_LLM_PROVIDER=none` |
-| 13 | Repo named `ForkableAISkunkWork` | **PASS** | Local git repo, 8 commits on `main` |
-| 14 | Project in folder `ForkableAIAgent` | **PASS** | `ForkableAISkunkWork/ForkableAIAgent/` |
+| 13 | Repo named `ForkablePlaywrightSelfHealer` | **PASS** | Local git repo, 8 commits on `main` |
+| 14 | Project in folder `PlaywrightSelfHealer` | **PASS** | `ForkablePlaywrightSelfHealer/PlaywrightSelfHealer/` |
 | 15 | Pushed to GitHub | **FAIL** | No credentials here. `scripts/push_to_github.sh` publishes in one command |
 
 ## What changed since the first pass
@@ -97,6 +97,22 @@ v2:/login  username  css||0|#usr_1a2b                     1  1.00  healed
    as well as `ACTIONS`, so `expect_status` demanded a DOM target. A disjointness
    assertion now guards it.
 
+## On the word "agent"
+
+The brief asked for an AI agent, and it is worth being precise about what was
+built. Planning is a single LLM call (or a regex grammar). Locator resolution is
+deterministic. Healing scores a DOM snapshot heuristically and consults a model
+only to break ties. There is no goal decomposition, no tool selection and no
+observe-replan-retry loop.
+
+The live demo above ran with **zero LLM calls** - the rule grammar planned it and
+the heuristic scorer healed it. The README carries this breakdown rather than
+burying it, and the repository is named for what it does.
+
+Closing the gap honestly would mean a real loop in `executor.py`: on failure,
+re-observe, replan, retry, rather than stopping. That is roughly a day's work and
+is the obvious next step for anyone who wants the label to be earned.
+
 ## Remaining gaps
 
 1. **Not on GitHub.** No credentials in this environment.
@@ -106,6 +122,7 @@ v2:/login  username  css||0|#usr_1a2b                     1  1.00  healed
 4. **No real Ollama.** The HTTP contract is verified against a faithful fake, but a
    real 14B model will produce messier output than a scripted responder. Prompt
    robustness is the thing most likely to need tuning on first contact.
-5. **Rule grammar is English-only.** A floor, not a replacement for a model.
+5. **Rule grammar is English-only**, covering ~20 phrasing families. A floor, not a
+   replacement for a model.
 6. **`expect_json` compares by substring**, not type-aware equality. Fine for
    smoke assertions, insufficient for strict schema validation.

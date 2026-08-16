@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "forkable-ai-agent"
 version = "0.1.0"
-description = "Offline-first Playwright AI test agent: plan, generate, run, self-heal and explain UI tests with a local LLM."
+description = "Self-healing Playwright tests: plan, generate, run, repair and explain UI + API tests offline, heuristic-first with an optional local LLM."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "Surya Kulshreshtha" }]
-keywords = ["playwright", "testing", "ai-agent", "ollama", "rag", "self-healing", "offline"]
+keywords = ["playwright", "testing", "self-healing", "test-automation", "pytest", "ollama", "local-llm", "rag", "offline"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Framework :: Pytest",
@@ -39,7 +39,7 @@ dev = [
 forkable = "forkable_ai_agent.cli:main"
 
 [project.urls]
-Repository = "https://github.com/suryakulshreshtha/ForkableAISkunkWork"
+Repository = "https://github.com/suryakulshreshtha/ForkablePlaywrightSelfHealer"
 
 [tool.setuptools.packages.find]
 where = ["src"]

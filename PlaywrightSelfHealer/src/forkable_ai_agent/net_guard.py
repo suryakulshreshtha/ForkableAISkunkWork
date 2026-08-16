@@ -74,7 +74,7 @@ def _check(address: Any, family: int | None = None) -> None:
         if not is_loopback_host(host):
             raise OfflineViolation(
                 f"offline mode: refused connection to {host!r}. "
-                "ForkableAIAgent only talks to loopback. "
+                "PlaywrightSelfHealer only talks to loopback. "
                 "Unset FORKABLE_OFFLINE to disable this guard."
             )
 

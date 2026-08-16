@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 # Publish this repository. Run from the repo root (the folder containing
-# ForkableAIAgent/). Requires the GitHub CLI, or edit REMOTE and use plain git.
+# PlaywrightSelfHealer/). Requires the GitHub CLI, or edit REMOTE and use plain git.
 set -euo pipefail
 
 OWNER="${OWNER:-suryakulshreshtha}"
-REPO="${REPO:-ForkableAISkunkWork}"
+REPO="${REPO:-ForkablePlaywrightSelfHealer}"
 REMOTE="git@github.com:${OWNER}/${REPO}.git"
 
 if ! git rev-parse --git-dir >/dev/null 2>&1; then
   git init -b main
   git add -A
-  git commit -m "ForkableAIAgent: offline Playwright AI agent"
+  git commit -m "PlaywrightSelfHealer: offline Playwright AI agent"
 fi
 
 if command -v gh >/dev/null 2>&1; then

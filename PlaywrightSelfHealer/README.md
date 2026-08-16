@@ -1,39 +1,50 @@
-# ForkableAIAgent
+# PlaywrightSelfHealer
 
-An offline-first Playwright test agent. It turns plain English into a test plan,
-runs it against a live page, repairs selectors the app broke, explains failures
-against a local knowledge base, and emits standalone pytest code — with a local
-Ollama model, or with no model at all.
+![CI](https://github.com/suryakulshreshtha/ForkablePlaywrightSelfHealer/actions/workflows/ci.yml/badge.svg)
+![Python](https://img.shields.io/badge/python-3.11%2B-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Tests](https://img.shields.io/badge/tests-125%20passing-brightgreen)
+
+**Self-healing Playwright tests in Python.** Write tests in plain English, run
+them against real browsers, and let the suite repair the locators your app
+broke — heuristic-first, LLM-assisted, with no cloud API, no network and no
+telemetry.
+
+> Python · Playwright · Ollama · RAG · pytest · offline-first
+
+![Self-healing in action](docs/demo.gif)
+
+*Same spec, same command. Between the two runs every `data-testid` was deleted
+and every id renamed — the locators re-bind and the repair is remembered.*
 
 The design constraint that shaped everything: **it must work on a machine with
 the network cable pulled out.** Not "works offline once warmed up" — the socket
 layer is patched so a non-loopback connection raises before a packet leaves the
 process.
 
-```
-$ forkable demo
+## How much of this is AI?
 
-=== v1: stable UI ===
-PASSED login_happy_path  (0.3s)
-  ok    1. goto          /login          http://127.0.0.1:8799/login
-  ok    2. fill          username        testid([data-testid="username"])
-  ok    3. fill          password        testid([data-testid="password"])
-  ok    4. click         log in          testid([data-testid="login"])
-  ok    5. expect_url    /dashboard      http://127.0.0.1:8799/dashboard
-  ok    6. expect_text   Welcome
+Worth being precise, because "AI agent" is doing a lot of unearned work in this
+corner of the ecosystem.
 
-=== v2: refactored UI - ids and labels changed ===
-PASSED login_happy_path  (0.5s)
-  ok    1. goto          /login          http://127.0.0.1:8799/login
-  ok    2. fill          username        css(#usr_1a2b) [healed]
-  ok    3. fill          password        css(input[type="password"])
-  ok    4. click         log in          role(button:log in)
-  ok    5. expect_url    /dashboard      http://127.0.0.1:8799/dashboard
-  ok    6. expect_text   Welcome
-```
+| Part | What it actually is |
+| --- | --- |
+| Planning | One LLM call, English to JSON — or a regex grammar when no model is loaded |
+| Locator resolution | A deterministic ladder of candidate strategies. No model involved |
+| Healing | Fuzzy token scoring over a DOM snapshot; the model is consulted only to break ties |
+| Failure analysis | Regex classification plus retrieval; the model writes the prose, not the verdict |
+| Memory | Genuinely adaptive — proven locators change what later runs do |
 
-Same plan, same command. Between the two runs every `data-testid` was deleted,
-every id was renamed and the labels were reworded. Nothing in the spec changed.
+There is no goal decomposition, no tool selection and no observe-replan-retry
+loop. It executes a plan; it does not pursue an objective. The demo above ran
+with **zero LLM calls** — the rule grammar planned it and the heuristic scorer
+healed it.
+
+That ordering is the design, not a shortfall: the deterministic path is
+reproducible in CI, costs microseconds, and on the common failure — an id churn
+where the label survived — it is simply correct. A local model makes the
+planning more flexible and the diagnoses more readable. It is an accelerant, not
+the mechanism.
 
 ## Why the plan holds no selectors
 
@@ -107,12 +118,12 @@ without it, the guard is armed.
 
 | Capability | How |
 | --- | --- |
-| Natural language → tests | Local LLM, or a deterministic regex grammar |
-| Self-healing locators | Candidate ladder → fuzzy DOM scoring → optional LLM tie-break → persisted cache |
+| Natural language → tests | One LLM call, or a deterministic regex grammar covering ~20 phrasing families |
+| Self-healing locators | Candidate ladder → fuzzy DOM scoring → optional LLM tie-break → persisted cache. The first two rungs need no model |
 | AI-assisted generation | Plan → pytest + Playwright source, preferring locators proven on a real page |
-| Failure analysis | Rule classification + hybrid RAG over local notes + optional LLM summary |
+| Failure analysis | Rule classification decides the category; RAG grounds it; the model only narrates |
 | Visual validation | Pillow pixel diff with tolerance, red-overlay heatmaps, baseline management |
-| Cross-browser | Chromium, Firefox, WebKit via `--browser` |
+| Cross-browser | Chromium verified end to end. Firefox and WebKit are wired via `--browser` but untested — see Known nuances |
 | API + UI | `api_request` / `expect_status` / `expect_json` steps run through `page.request`, sharing the browser's cookie jar |
 | Regression + CI | `pytest -m "not e2e"` needs no browser and no model |
 | Context-aware execution | Locator memory is scoped per page path, so the same description can bind differently per page |
@@ -139,7 +150,7 @@ keys when the path is wrong rather than an opaque `KeyError`.
 
 ## Generated code improves after a run
 
-Before the agent has seen the page it emits semantic locators derived from your
+Before it has seen the page, the generator emits semantic locators derived from your
 own words:
 
 ```python
@@ -218,12 +229,6 @@ Two fake servers keep coverage honest without network or hardware:
   embeddings and failure narration are exercised over actual HTTP rather than
   against mock objects.
 
-The suite includes a miniature headless browser (`tests/support/fake_page.py`)
-that speaks HTTP to the real demo app, parses the real HTML and implements the
-slice of the Playwright page API the agent calls. It exists so that healing,
-memory and execution stay covered on build machines where a 150 MB browser
-download is not an option.
-
 ## Layout
 
 ```
@@ -267,4 +272,8 @@ the extra and set `backend = "chroma"` in `config/agent.toml` —
 - Font rendering differs between machines, so visual baselines should be
   produced in the same container that verifies them.
 - The healer repairing a selector is a bug report against the app. The durable
-  fix is adding a `data-testid`, not letting the agent guess forever.
+  fix is adding a `data-testid`, not letting the resolver guess forever.
+- Only Chromium is verified. Firefox and WebKit are wired and should work, but
+  no run has proved it — treat `--browser firefox` as untested until you try it.
+- The Python package is still `forkable_ai_agent`. The import path is not a
+  marketing surface, and renaming it would churn every module for no gain.

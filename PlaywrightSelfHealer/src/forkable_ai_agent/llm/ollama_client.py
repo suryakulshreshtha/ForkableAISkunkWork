@@ -43,7 +43,7 @@ class OllamaLLM:
         if enforce_loopback and not is_loopback_host(host):
             raise ValueError(
                 f"refusing non-loopback Ollama host {host!r}; "
-                "ForkableAIAgent keeps inference on the machine"
+                "PlaywrightSelfHealer keeps inference on the machine"
             )
         self._available: bool | None = None
 

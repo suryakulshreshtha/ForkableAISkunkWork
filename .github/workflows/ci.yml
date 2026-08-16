@@ -8,7 +8,7 @@ on:
 
 defaults:
   run:
-    working-directory: ForkableAIAgent
+    working-directory: PlaywrightSelfHealer
 
 jobs:
   test:
@@ -49,7 +49,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: pw-${{ runner.os }}-${{ hashFiles('ForkableAIAgent/pyproject.toml') }}
+          key: pw-${{ runner.os }}-${{ hashFiles('PlaywrightSelfHealer/pyproject.toml') }}
 
       - name: Install chromium
         run: python -m playwright install --with-deps chromium
@@ -74,6 +74,6 @@ jobs:
         with:
           name: forkable-reports-py${{ matrix.python-version }}
           path: |
-            ForkableAIAgent/.forkable/reports/
-            ForkableAIAgent/.forkable/artifacts/
+            PlaywrightSelfHealer/.forkable/reports/
+            PlaywrightSelfHealer/.forkable/artifacts/
           if-no-files-found: ignore

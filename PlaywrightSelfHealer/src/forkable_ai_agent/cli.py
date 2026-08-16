@@ -62,7 +62,7 @@ def _agent(args: argparse.Namespace):
 # ----------------------------------------------------------------------
 def cmd_doctor(args: argparse.Namespace) -> int:
     agent = _agent(args)
-    print(_colour(f"ForkableAIAgent {__version__} - offline readiness", BOLD))
+    print(_colour(f"PlaywrightSelfHealer {__version__} - offline readiness", BOLD))
     failures = 0
     for check in agent.doctor():
         if check.ok:
@@ -230,7 +230,7 @@ def build_parser() -> argparse.ArgumentParser:
         prog="forkable",
         description="Offline Playwright AI agent: plan, generate, run, heal and explain UI tests.",
     )
-    parser.add_argument("--version", action="version", version=f"ForkableAIAgent {__version__}")
+    parser.add_argument("--version", action="version", version=f"PlaywrightSelfHealer {__version__}")
     parser.add_argument("--config", help="path to agent.toml")
     parser.add_argument("--allow-network", action="store_true",
                         help="disarm the loopback-only socket guard")

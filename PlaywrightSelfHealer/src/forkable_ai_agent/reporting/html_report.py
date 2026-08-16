@@ -111,10 +111,10 @@ def render_html(result: RunResult, memory: Any = None) -> str:
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ForkableAIAgent - {html.escape(plan.name)}</title>
+<title>PlaywrightSelfHealer - {html.escape(plan.name)}</title>
 <style>{_CSS}</style></head><body>
 <header>
-  <h1>ForkableAIAgent run report</h1>
+  <h1>PlaywrightSelfHealer run report</h1>
   <p>{html.escape(plan.name)} &middot; plan source: {html.escape(plan.source)}
      &middot; {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(result.started_at))}</p>
 </header>
@@ -133,7 +133,7 @@ def render_html(result: RunResult, memory: Any = None) -> str:
   <tbody>{''.join(rows)}</tbody></table>
   {diagnosis_block}
   {healing_block}
-  <footer>Generated offline by ForkableAIAgent. No external resources are referenced by this file.</footer>
+  <footer>Generated offline by PlaywrightSelfHealer. No external resources are referenced by this file.</footer>
 </main></body></html>"""
 
 

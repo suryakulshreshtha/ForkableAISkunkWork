@@ -1,4 +1,4 @@
-# ForkableAIAgent architecture
+# PlaywrightSelfHealer architecture
 
 ## Pipeline
 

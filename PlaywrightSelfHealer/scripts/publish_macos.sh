@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Publish ForkableAISkunkWork to github.com/suryakulshreshtha, from macOS.
+# Publish ForkablePlaywrightSelfHealer to github.com/suryakulshreshtha, from macOS.
 # See PUBLISHING.md for the annotated version of every step below.
 set -euo pipefail
 
 EMAIL="${GITHUB_EMAIL:-}"
 OWNER="${OWNER:-suryakulshreshtha}"
-REPO="${REPO:-ForkableAISkunkWork}"
-DESC="Offline-first Playwright AI test agent: NL to tests, self-healing locators, local Ollama + RAG. No network required."
+REPO="${REPO:-ForkablePlaywrightSelfHealer}"
+DESC="Self-healing Playwright tests in Python. Plain English to UI + API tests that repair their own locators. Heuristic-first, LLM-assisted, fully offline."
 
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-PROJECT="$REPO_ROOT/ForkableAIAgent"
+PROJECT="$REPO_ROOT/PlaywrightSelfHealer"
 
 say()  { printf '\n\033[1m==> %s\033[0m\n' "$1"; }
 die()  { printf '\033[31mERROR: %s\033[0m\n' "$1" >&2; exit 1; }
@@ -61,8 +61,8 @@ fi
 say "Topics"
 gh repo edit "$OWNER/$REPO" \
   --add-topic playwright --add-topic ollama --add-topic ai-agent \
-  --add-topic self-healing --add-topic offline-ai --add-topic rag \
-  --add-topic python --add-topic test-automation
+  --add-topic self-healing-tests --add-topic test-automation --add-topic rag \
+  --add-topic pytest --add-topic qa-automation --add-topic sdet --add-topic local-llm
 
 say "Done - https://github.com/$OWNER/$REPO"
 echo "    watch the first CI run with: gh run watch"

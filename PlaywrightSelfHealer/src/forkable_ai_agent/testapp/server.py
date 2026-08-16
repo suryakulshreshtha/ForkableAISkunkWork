@@ -195,7 +195,7 @@ class _Handler(BaseHTTPRequestHandler):
         if route == "/":
             body = (
                 "<h1>Forkable Ops</h1><p class='lede'>An offline target for the "
-                "ForkableAIAgent demo.</p><p><a href='/login' data-testid='go-login'>"
+                "PlaywrightSelfHealer demo.</p><p><a href='/login' data-testid='go-login'>"
                 "Open the sign-in page</a></p>"
                 "<p class='meta'>Accounts: demo / secret123</p>"
             )

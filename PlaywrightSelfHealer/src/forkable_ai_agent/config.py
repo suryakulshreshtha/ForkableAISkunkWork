@@ -1,4 +1,4 @@
-"""Configuration for ForkableAIAgent.
+"""Configuration for PlaywrightSelfHealer.
 
 Precedence (lowest to highest): dataclass defaults -> config/agent.toml -> env vars.
 TOML is read with the stdlib ``tomllib`` (Python 3.11+) so config parsing adds
@@ -19,7 +19,7 @@ except ModuleNotFoundError:  # pragma: no cover - only on <3.11
 
 
 def project_root() -> Path:
-    """Root of the ForkableAIAgent project (the folder holding pyproject.toml)."""
+    """Root of the PlaywrightSelfHealer project (the folder holding pyproject.toml)."""
     return Path(__file__).resolve().parents[2]
 
 

@@ -1,4 +1,4 @@
-# ForkableAIAgent configuration.
+# PlaywrightSelfHealer configuration.
 # Every value here can be overridden by an environment variable; see .env.example.
 
 # Hard-block any socket that is not loopback. Leave this on.

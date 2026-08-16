@@ -12,15 +12,15 @@ zsh. Read section 1 to know what you are shipping, then follow section 3 or 4.
 
 | Field | Value |
 |---|---|
-| Repository name | `ForkableAISkunkWork` |
+| Repository name | `ForkablePlaywrightSelfHealer` |
 | Owner | `suryakulshreshtha` |
 | Default branch | `main` |
 | Visibility | Public (recommended — it is a portfolio piece) |
 | Licence | MIT |
-| Preset remote | `https://github.com/suryakulshreshtha/ForkableAISkunkWork.git` |
-| Project folder | `ForkableAIAgent/` |
-| Description | Offline-first Playwright AI test agent: NL to tests, self-healing locators, local Ollama + RAG. No network required. |
-| Topics | `playwright` `ollama` `ai-agent` `self-healing` `offline-ai` `rag` `python` `test-automation` |
+| Preset remote | `https://github.com/suryakulshreshtha/ForkablePlaywrightSelfHealer.git` |
+| Project folder | `PlaywrightSelfHealer/` |
+| Description | Self-healing Playwright tests in Python. Plain English to UI + API tests that repair their own locators. Heuristic-first, LLM-assisted, fully offline. |
+| Topics | `playwright` `self-healing-tests` `test-automation` `playwright-python` `pytest` `qa-automation` `sdet` `local-llm` `ollama` `rag` `offline-first` `e2e-testing` |
 
 ### Size and composition
 
@@ -107,8 +107,8 @@ to `~/.zprofile`.
 
 ```bash
 cd ~/Developer                      # or wherever you keep projects
-unzip ~/Downloads/ForkableAISkunkWork.zip
-cd ForkableAISkunkWork/ForkableAIAgent
+unzip ~/Downloads/ForkablePlaywrightSelfHealer.zip
+cd ForkablePlaywrightSelfHealer/PlaywrightSelfHealer
 
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev,visual]"
@@ -155,7 +155,7 @@ Find your address at GitHub → Settings → Emails. If "Keep my email private" 
 on, use the `ID+username@users.noreply.github.com` form shown there.
 
 ```bash
-cd ~/Developer/ForkableAISkunkWork
+cd ~/Developer/ForkablePlaywrightSelfHealer
 
 git config user.name  "Surya Kulshreshtha"
 git config user.email "<your-github-email>"
@@ -174,12 +174,12 @@ been pushed yet, so there is no risk.
 The remote is already configured. With `gh`:
 
 ```bash
-gh repo create suryakulshreshtha/ForkableAISkunkWork \
+gh repo create suryakulshreshtha/ForkablePlaywrightSelfHealer \
   --public \
   --source=. \
   --remote=origin \
   --push \
-  --description "Offline-first Playwright AI test agent: NL to tests, self-healing locators, local Ollama + RAG. No network required."
+  --description "Self-healing Playwright tests in Python. Plain English to UI + API tests that repair their own locators. Heuristic-first, LLM-assisted, fully offline."
 ```
 
 Without `gh` — create the repo at [github.com/new](https://github.com/new)
@@ -187,7 +187,7 @@ Without `gh` — create the repo at [github.com/new](https://github.com/new)
 has all three), then:
 
 ```bash
-git remote set-url origin https://github.com/suryakulshreshtha/ForkableAISkunkWork.git
+git remote set-url origin https://github.com/suryakulshreshtha/ForkablePlaywrightSelfHealer.git
 git push -u origin main
 ```
 
@@ -198,10 +198,11 @@ section 6 if you need one.
 ### 3.5 Configure the repository
 
 ```bash
-gh repo edit suryakulshreshtha/ForkableAISkunkWork \
-  --add-topic playwright --add-topic ollama --add-topic ai-agent \
-  --add-topic self-healing --add-topic offline-ai --add-topic rag \
-  --add-topic python --add-topic test-automation \
+gh repo edit suryakulshreshtha/ForkablePlaywrightSelfHealer \
+  --add-topic playwright --add-topic self-healing-tests --add-topic test-automation \
+  --add-topic playwright-python --add-topic pytest --add-topic qa-automation \
+  --add-topic sdet --add-topic local-llm --add-topic ollama --add-topic rag \
+  --add-topic offline-first --add-topic e2e-testing \
   --enable-issues --enable-wiki=false
 ```
 
@@ -230,14 +231,14 @@ standalone repo is cleaner. If you still want it merged:
 git clone https://github.com/suryakulshreshtha/ForkedUpAIExperiments.git
 cd ForkedUpAIExperiments
 
-cp -R ~/Developer/ForkableAISkunkWork/ForkableAIAgent ./03-playwright-ai-agent
+cp -R ~/Developer/ForkablePlaywrightSelfHealer/PlaywrightSelfHealer ./03-playwright-ai-agent
 rm -rf 03-playwright-ai-agent/.venv 03-playwright-ai-agent/.forkable
 
 mkdir -p .github/workflows
-cp ~/Developer/ForkableAISkunkWork/.github/workflows/ci.yml .github/workflows/forkable-ci.yml
-sed -i '' 's|working-directory: ForkableAIAgent|working-directory: 03-playwright-ai-agent|' \
+cp ~/Developer/ForkablePlaywrightSelfHealer/.github/workflows/ci.yml .github/workflows/forkable-ci.yml
+sed -i '' 's|working-directory: PlaywrightSelfHealer|working-directory: 03-playwright-ai-agent|' \
   .github/workflows/forkable-ci.yml
-sed -i '' 's|ForkableAIAgent/|03-playwright-ai-agent/|g' .github/workflows/forkable-ci.yml
+sed -i '' 's|PlaywrightSelfHealer/|03-playwright-ai-agent/|g' .github/workflows/forkable-ci.yml
 
 git add . && git commit -m "Add offline Playwright AI test agent" && git push
 ```
@@ -259,12 +260,12 @@ Then add a section to that repo's README following its existing pattern.
 | CI green | Actions tab, or `gh run list` |
 | README renders | Tables and code blocks intact |
 | Licence detected | Sidebar shows "MIT" |
-| Clone works | `git clone … /tmp/x && cd /tmp/x/ForkableAIAgent && ./scripts/ci_local.sh` |
+| Clone works | `git clone … /tmp/x && cd /tmp/x/PlaywrightSelfHealer && ./scripts/ci_local.sh` |
 
 Optional hardening once CI is green:
 
 ```bash
-gh api repos/suryakulshreshtha/ForkableAISkunkWork/branches/main/protection \
+gh api repos/suryakulshreshtha/ForkablePlaywrightSelfHealer/branches/main/protection \
   -X PUT -F required_status_checks[strict]=true \
   -F 'required_status_checks[contexts][]=test (3.12)' \
   -F enforce_admins=false -F required_pull_request_reviews=null -F restrictions=null
@@ -280,7 +281,7 @@ GitHub → Settings → Developer settings → Personal access tokens →
 | Setting | Value |
 |---|---|
 | Resource owner | `suryakulshreshtha` |
-| Repository access | Only select repositories → `ForkableAISkunkWork` |
+| Repository access | Only select repositories → `ForkablePlaywrightSelfHealer` |
 | Permissions → Contents | Read and write |
 | Permissions → Workflows | Read and write (needed to push `.github/workflows/`) |
 | Expiration | 90 days |
@@ -306,7 +307,7 @@ ssh-add --apple-use-keychain ~/.ssh/id_ed25519
 pbcopy < ~/.ssh/id_ed25519.pub          # paste at github.com/settings/keys
 ssh -T git@github.com                   # expect: Hi suryakulshreshtha!
 
-git remote set-url origin git@github.com:suryakulshreshtha/ForkableAISkunkWork.git
+git remote set-url origin git@github.com:suryakulshreshtha/ForkablePlaywrightSelfHealer.git
 ```
 
 `UseKeychain` and `--apple-use-keychain` are macOS-only and are what stop the
@@ -343,7 +344,7 @@ Everything in section 3, once you have set `EMAIL`:
 set -euo pipefail
 EMAIL="<your-github-email>"
 
-cd ~/Developer/ForkableAISkunkWork/ForkableAIAgent
+cd ~/Developer/ForkablePlaywrightSelfHealer/PlaywrightSelfHealer
 python3 -m venv .venv && source .venv/bin/activate
 pip install -q -e ".[dev,visual]"
 python -m playwright install chromium
@@ -355,11 +356,11 @@ git config user.email "$EMAIL"
 git rebase -r --root --exec 'git commit --amend --no-edit --reset-author'
 
 gh auth status
-gh repo create suryakulshreshtha/ForkableAISkunkWork \
+gh repo create suryakulshreshtha/ForkablePlaywrightSelfHealer \
   --public --source=. --remote=origin --push \
-  --description "Offline-first Playwright AI test agent: NL to tests, self-healing locators, local Ollama + RAG. No network required."
+  --description "Self-healing Playwright tests in Python. Plain English to UI + API tests that repair their own locators. Heuristic-first, LLM-assisted, fully offline."
 
-gh repo edit suryakulshreshtha/ForkableAISkunkWork \
+gh repo edit suryakulshreshtha/ForkablePlaywrightSelfHealer \
   --add-topic playwright --add-topic ollama --add-topic ai-agent \
   --add-topic self-healing --add-topic offline-ai --add-topic rag
 gh run watch

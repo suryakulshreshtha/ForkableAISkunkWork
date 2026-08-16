@@ -63,7 +63,7 @@ def test_report_files_are_written(settings):
     path = write_report(settings, _sample_result())
     assert path.exists()
     assert path.with_suffix(".json").exists()
-    assert "ForkableAIAgent run report" in path.read_text(encoding="utf-8")
+    assert "PlaywrightSelfHealer run report" in path.read_text(encoding="utf-8")
 
 
 def test_html_escapes_hostile_content(settings):
