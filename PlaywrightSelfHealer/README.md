@@ -1,4 +1,4 @@
-# PlaywrightSelfHealer
+#PlaywrightSelfHealer
 
 ![CI](https://github.com/suryakulshreshtha/ForkablePlaywrightSelfHealer/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
@@ -11,6 +11,8 @@ broke — heuristic-first, LLM-assisted, with no cloud API, no network and no
 telemetry.
 
 > Python · Playwright · Ollama · RAG · pytest · offline-first
+
+![Self-healing in action](docs/demo.png)
 
 
 *Same spec, same command. Between the two runs every `data-testid` was deleted
