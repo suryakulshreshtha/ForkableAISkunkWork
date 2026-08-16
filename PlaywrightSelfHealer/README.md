@@ -12,7 +12,6 @@ telemetry.
 
 > Python · Playwright · Ollama · RAG · pytest · offline-first
 
-![Self-healing in action](docs/demo.gif)
 
 *Same spec, same command. Between the two runs every `data-testid` was deleted
 and every id renamed — the locators re-bind and the repair is remembered.*
